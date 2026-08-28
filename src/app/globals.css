@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* ===== タイトル画面の背景 =====
+   名言タイピングらしく、文字が静かに流れる背景にしている */
+@keyframes title-char-fall {
+  0%   { transform: translateY(-12vh); opacity: 0; }
+  12%  { opacity: 0.5; }
+  88%  { opacity: 0.5; }
+  100% { transform: translateY(112vh); opacity: 0; }
+}
+
+.title-char {
+  position: absolute;
+  top: 0;
+  font-family: var(--font-geist-mono), monospace;
+  user-select: none;
+  animation: title-char-fall linear infinite;
+}
+
+.title-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(120, 180, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 180, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.9), transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.9), transparent 75%);
+}
+
+/* ===== カウントダウン ===== */
+@keyframes count-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  30%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+.animate-count-pop { animation: count-pop 0.9s ease-out forwards; }
+
+/* ===== ミスタイプ時に画面をひと呼吸だけ赤く光らせる ===== */
+@keyframes miss-flash {
+  0%   { background-color: rgba(239, 68, 68, 0.22); }
+  100% { background-color: rgba(239, 68, 68, 0); }
+}
+.animate-miss-flash { animation: miss-flash 0.22s ease-out; }
+
+/* ===== 1問クリア時 ===== */
+@keyframes quote-in {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+.animate-quote-in { animation: quote-in 0.28s ease-out; }
+
+/* ===== カーソル ===== */
+@keyframes caret-blink {
+  0%, 45%   { opacity: 1; }
+  55%, 100% { opacity: 0.15; }
+}
+.animate-caret { animation: caret-blink 1s steps(1, end) infinite; }
+
+/* ===== Global reset ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #050510;
+  color: #fff;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
