@@ -11,6 +11,14 @@ export interface Quote {
   author: string;
   authorEn: string;
   role: string;
+  /**
+   * 出典。書名や演説名が特定できるものはそれを書く。
+   * 特定できないものは「〜として伝わる」のように、断定を避けた書き方にしてある
+   * (もっともらしい出典をでっち上げないこと)。
+   */
+  source: string;
+  /** 名言の意味と、それが語られた背景。1問打ち終わったあとに表示する */
+  note: string;
 }
 
 /** 遊ぶモード。日本語はローマ字入力、英語は原文をそのまま打つ */
@@ -34,7 +42,8 @@ export interface TypingState {
   typed: string;
 }
 
-export type Phase = "title" | "countdown" | "playing" | "result";
+/** reveal = 1問打ち終わって、その名言の出典と背景を見せている状態 */
+export type Phase = "title" | "countdown" | "playing" | "reveal" | "result";
 
 /** 1問ぶんの成績 */
 export interface QuestionResult {

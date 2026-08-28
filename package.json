@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate": "node --experimental-strip-types --no-warnings scripts/validate-quotes.ts"
   },
   "dependencies": {
     "next": "16.2.6",

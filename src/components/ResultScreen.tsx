@@ -98,6 +98,8 @@ export function ResultScreen({
                 <span className="block mt-1 text-white/40">
                   — {mode === "ja" ? q.author : q.authorEn}（{q.role}）
                 </span>
+                <span className="block mt-1 text-sky-200/70">出典: {q.source}</span>
+                <span className="block mt-1 text-white/55 leading-relaxed">{q.note}</span>
               </li>
             ))}
           </ul>

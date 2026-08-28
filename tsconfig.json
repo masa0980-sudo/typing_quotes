@@ -30,5 +30,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "_comment_exclude": "scripts/ は Node から直接 .ts を実行する検証用スクリプトで、import に .ts 拡張子を書く必要がある。アプリのビルド対象ではないので型チェックから外す。",
+  "exclude": ["node_modules", "scripts"]
 }

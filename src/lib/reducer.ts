@@ -31,6 +31,7 @@ export type Action =
   | { type: "START"; now: number }
   | { type: "COUNTDOWN"; now: number }
   | { type: "KEY"; char: string; now: number }
+  | { type: "NEXT"; now: number }
   | { type: "TO_TITLE" };
 
 const EMPTY_TYPING: TypingState = { segments: [], segIndex: 0, buffer: "", typed: "" };
@@ -121,36 +122,37 @@ export function reducer(state: GameState, action: Action): GameState {
         return { ...state, typing: res.state, correct, totalCorrect, lastMiss: false };
       }
 
-      // 1問打ち終わった
+      // 1問打ち終わった。すぐ次へは進まず、その名言の出典と背景を見せる
       const result: QuestionResult = {
         quoteId: state.quotes[state.index].id,
         correct,
         miss: state.miss,
         elapsedMs: action.now - state.questionStartedAt,
       };
-      const results = [...state.results, result];
-      const nextIndex = state.index + 1;
-
-      if (nextIndex >= state.quotes.length) {
-        return {
-          ...state,
-          phase: "result",
-          typing: res.state,
-          correct,
-          totalCorrect,
-          results,
-          lastMiss: false,
-        };
-      }
-
       return {
         ...state,
+        phase: "reveal",
+        typing: res.state,
+        correct,
+        totalCorrect,
+        results: [...state.results, result],
+        lastMiss: false,
+      };
+    }
+
+    case "NEXT": {
+      if (state.phase !== "reveal") return state;
+      const nextIndex = state.index + 1;
+      if (nextIndex >= state.quotes.length) {
+        return { ...state, phase: "result" };
+      }
+      return {
+        ...state,
+        phase: "playing",
         index: nextIndex,
         typing: typingFor(state.quotes[nextIndex], state.mode),
-        results,
         correct: 0,
         miss: 0,
-        totalCorrect,
         questionStartedAt: action.now,
         lastMiss: false,
       };

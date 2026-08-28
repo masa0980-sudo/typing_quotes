@@ -13,6 +13,7 @@ import {
 } from "@/lib/sound";
 import { TitleScreen } from "./TitleScreen";
 import { PlayScreen } from "./PlayScreen";
+import { RevealScreen } from "./RevealScreen";
 import { ResultScreen } from "./ResultScreen";
 
 export function GameScreen() {
@@ -73,6 +74,14 @@ export function GameScreen() {
         dispatch({ type: "TO_TITLE" });
         return;
       }
+      // 解説を読んでいる間は Enter / Space で次へ進む
+      if (state.phase === "reveal") {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          dispatch({ type: "NEXT", now: Date.now() });
+        }
+        return;
+      }
       if (state.phase !== "playing") return;
       // ショートカット類は拾わない
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -124,6 +133,22 @@ export function GameScreen() {
         </div>
         <p className="text-xs text-white/40">指をホームポジションに置いて…</p>
       </div>
+    );
+  }
+
+  if (state.phase === "reveal") {
+    const last = state.results[state.results.length - 1];
+    return (
+      <RevealScreen
+        quote={state.quotes[state.index]}
+        mode={state.mode}
+        index={state.index}
+        total={state.quotes.length}
+        correct={last?.correct ?? 0}
+        miss={last?.miss ?? 0}
+        elapsedMs={last?.elapsedMs ?? 0}
+        onNext={() => dispatch({ type: "NEXT", now: Date.now() })}
+      />
     );
   }
 
