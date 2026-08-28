@@ -31,8 +31,9 @@ src/
     layout.tsx    # フォント・メタデータ
     globals.css   # Tailwind v4 + 画面演出のkeyframes
   lib/
-    quotes/       # 名言データ(105件)。分野ごとに分割。index.ts がまとめる
-      index.ts science.ts philosophy.ts society.ts arts.ts japan.ts short.ts
+    quotes/       # 名言データ(115件)。分野ごとに分割。index.ts がまとめる
+      index.ts science.ts philosophy.ts society.ts
+      arts.ts japan.ts short.ts modern.ts
     romaji.ts     # ★ローマ字入力エンジン(このリポジトリの心臓部)
     types.ts      # 型定義
     constants.ts  # 出題数・ランクしきい値
@@ -100,6 +101,9 @@ kana に打てない文字が残っていないか、お手本どおり打って
 `source`(出典)と`note`(意味と背景)は必須。`source` は書名や演説名が特定できるものはそれを書き、
 特定できないものは「〜の言葉として広く伝わる」のように**断定を避ける**。
 もっともらしい出典をでっち上げないこと。
+
+`modern.ts` は現代の実業家・クリエイターの言葉で、書物ではなく動画が出典になる。
+対談動画から採るときは**発言者が誰か**に注意すること(ゲストの発言が混ざっていることがある)。
 
 出典が確認できず、かつ別人の言葉だと分かっているものは入れない。実際に次のものは
 調査の結果まちがった帰属だったため、本人の別の言葉に差し替えてある。

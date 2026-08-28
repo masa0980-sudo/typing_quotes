@@ -8,7 +8,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "名言タイピング — Quote Typing",
   description:
-    "偉人たちの名言をお題に、正確さと速さを競うタイピングゲーム。日本語(ローマ字)と英語の2モードで遊べます。",
+    "偉人と一流の名言をお題に、正確さと速さを競うタイピングゲーム。日本語(ローマ字)と英語の2モードで遊べます。",
 };
 
 export const viewport: Viewport = {

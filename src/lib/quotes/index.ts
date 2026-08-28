@@ -5,6 +5,7 @@ import { SOCIETY } from "./society";
 import { ARTS } from "./arts";
 import { JAPAN } from "./japan";
 import { SHORT } from "./short";
+import { MODERN } from "./modern";
 
 /**
  * 名言の全リスト。分野ごとのファイルをここでまとめている。
@@ -20,6 +21,7 @@ export const QUOTES: Quote[] = [
   ...ARTS,
   ...JAPAN,
   ...SHORT,
+  ...MODERN,
 ];
 
-export { SCIENCE, PHILOSOPHY, SOCIETY, ARTS, JAPAN, SHORT };
+export { SCIENCE, PHILOSOPHY, SOCIETY, ARTS, JAPAN, SHORT, MODERN };

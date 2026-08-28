@@ -17,6 +17,7 @@ import { SOCIETY } from "../src/lib/quotes/society.ts";
 import { ARTS } from "../src/lib/quotes/arts.ts";
 import { JAPAN } from "../src/lib/quotes/japan.ts";
 import { SHORT } from "../src/lib/quotes/short.ts";
+import { MODERN } from "../src/lib/quotes/modern.ts";
 import {
   buildSegments,
   fullRomaji,
@@ -32,6 +33,7 @@ const GROUPS = {
   arts: ARTS,
   japan: JAPAN,
   short: SHORT,
+  modern: MODERN,
 };
 const QUOTES = Object.values(GROUPS).flat();
 

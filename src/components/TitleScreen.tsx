@@ -65,7 +65,7 @@ export function TitleScreen({ mode, best, onSelectMode, onStart }: Props) {
           QUOTE TYPING
         </div>
         <p className="text-xs sm:text-sm text-white/55 mt-3 text-center leading-relaxed">
-          偉人たちの名言をお題に、正確さと速さを競います。
+          偉人と一流の名言をお題に、正確さと速さを競います。
           <br />
           全{QUESTIONS_PER_GAME}問・収録{QUOTES.length}名言。
         </p>
