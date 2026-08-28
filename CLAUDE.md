@@ -17,10 +17,14 @@ npm run dev                      # http://localhost:3000
 npm run build                    # 静的エクスポート → out/
 GITHUB_PAGES=true npm run build  # 本番と同じ basePath 付きでビルド
 npx tsc --noEmit                 # 型チェックのみ
+npm run validate                 # 名言データの検証
+
+.claude/scripts/dev.sh 3111      # 開発サーバー(ポート固定)
+.claude/scripts/check.sh         # push前の3点セット: 検証 → 型 → 本番と同じビルド
 ```
 
 デプロイは `main` への push で GitHub Actions が自動実行する（`.github/workflows/deploy-pages.yml`）。
-別途デプロイコマンドはない。
+別途デプロイコマンドはない。**公開まわりの手順とハマりどころは `publish-to-pages` スキルにまとめてある。**
 
 ## Architecture
 
@@ -80,6 +84,9 @@ title → countdown → playing → reveal → playing → … → reveal → re
 
 ### 名言を追加するとき
 
+> 手順の詳細は `add-quotes` スキルにある。帰属の裏取りは `quote-verifier` エージェントに投げる。
+> ここに書くのは、忘れると壊れる要点だけ。
+
 分野に合うファイル(`quotes/science.ts` など)に1件足す。`index.ts` が自動でまとめる。
 **`kana` はひらがな・`ー`・`、`・`。` のみで書くこと。**
 漢字やカタカナが残っているとローマ字に展開できず、その問題が打てなくなる。
@@ -91,8 +98,12 @@ npm run validate
 ```
 
 kana に打てない文字が残っていないか、お手本どおり打って完了するか、英文がASCIIか、
-`source`/`note` が空でないか、id が重複していないかを一括で確認する
-(`scripts/validate-quotes.ts`)。
+`source`/`note` が空でないか、id が重複していないか、**日本語欄に他言語が混入していないか**を
+一括で確認する (`scripts/validate-quotes.ts`)。
+
+最後の1つは実際に3回起きた事故への対策。`データ`→`데이터`(ハングル)、`分野別`→`分野별`、
+`創る`→`создать`(キリル文字)のように、日本語を書いているつもりで別の文字体系が紛れ込むことがある。
+目視では気づきにくいので `FOREIGN = /[Ѐ-ӿ가-힯]/` で機械的に弾いている。
 
 > このスクリプトは Node から直接 `.ts` を読むため、import に拡張子まで書いてある。
 > Next.js や tsc は拡張子を補完するがNodeのESMは補完しないので、
@@ -116,6 +127,21 @@ kana に打てない文字が残っていないか、お手本どおり打って
 | 「成功は終わりではなく…」＝チャーチル | チャーチル協会が否定 |
 | 「聞いたことは忘れる、見たことは覚える…」＝フランクリン | 中国由来の格言 |
 
+## 公開（GitHub Pages）
+
+`main` へ push すれば自動で公開される。詳細な手順は `publish-to-pages` スキル。
+CLAUDE.md に残しておくのは、**一度やらかして時間を溶かした3点**だけ。
+
+- **リポジトリ名は `typing_quotes`（アンダースコア）**。`next.config.ts` の `repoName` が
+  1文字でも実物と違うと、ローカルでは動くのに公開先で全アセットが404になる。
+  変えるときは `README.md` / `package.json` の `name` も揃える。
+- **初回公開は、ユーザーが Settings → Pages → Source を「GitHub Actions」にしないと必ず失敗する。**
+  `Create Pages site failed. Error: Resource not accessible by integration` が出たらこれ。
+  コードをいじっても直らないので、ユーザーに設定を依頼して run を再実行する。
+  リポジトリの新規作成も同じ理由で自分ではできない（403）。
+- **Actions API のジョブ状態は数分古いまま返ることがある。** 進んでいないように見えても
+  すぐに cancel / rerun せず、数分待って取り直す。最終判断は `get_job_logs` の実ログ。
+
 ## 注意点
 
 - **乱数は必ずユーザー操作の中で回す**。`output: "export"` でビルド時にプリレンダリング
@@ -124,3 +150,21 @@ kana に打てない文字が残っていないか、お手本どおり打って
 - `basePath` は GitHub Actions のビルド時（`GITHUB_PAGES=true`）だけ付く。
   `public/` の画像を参照するときは `process.env.NEXT_PUBLIC_BASE_PATH` を前置する。
 - Tailwind CSS v4 のため `tailwind.config.js` は使わない。
+- **このサンドボックスからは `*.github.io` と多くの外部サイトに到達できない。**
+  公開URLを開いての表示確認も、名言サイトや Wikiquote を直接読んでの裏取りもできない
+  （`curl` が `000` を返す）。到達できなかったことを確認できたことにせず、
+  **報告時に「未確認」と明示する**こと。
+- `scripts/` は tsconfig の `exclude` に入れてある。ここを外すと
+  `next build` が TS5097（`.ts` 拡張子付きimportは不可）で落ちる。
+
+## `.claude` の中身
+
+| 場所 | 用途 |
+|---|---|
+| `skills/add-quotes/` | 名言を追加・修正するときの手順（帰属の裏取り、kanaの制約、検証） |
+| `skills/verify-in-browser/` | ローカル起動〜Playwrightでの動作確認 |
+| `skills/publish-to-pages/` | GitHub Pages 公開の手順と初回のハマりどころ |
+| `agents/quote-verifier.md` | 名言の帰属と出典を裏取りする調査エージェント |
+| `scripts/dev.sh` | 開発サーバー（ポート固定） |
+| `scripts/check.sh` | push前の3点セット（検証 → 型 → 本番と同じビルド） |
+| `settings.json` | 定型コマンドの許可設定 |

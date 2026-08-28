@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run validate)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(.claude/scripts/check.sh)",
+      "Bash(.claude/scripts/dev.sh:*)",
+      "mcp__github__actions_list",
+      "mcp__github__get_job_logs",
+      "mcp__github__actions_run_trigger"
+    ]
+  }
+}
