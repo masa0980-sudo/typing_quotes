@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 偉人の名言をお題にしたタイピングゲーム。日本語（ローマ字入力）と英語の2モードがある。
 Next.js の静的エクスポートで GitHub Pages に公開している。
 
-公開URL: https://masa0980-sudo.github.io/typing-quotes/
+公開URL: https://masa0980-sudo.github.io/typing_quotes/
 
 ## Commands
 

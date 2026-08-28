@@ -2,7 +2,7 @@
 
 偉人たちの名言をお題に、タイピングの**正確さと速さ**を競うブラウザゲーム。
 
-公開URL: https://masa0980-sudo.github.io/typing-quotes/
+公開URL: https://masa0980-sudo.github.io/typing_quotes/
 
 ## 遊び方
 
