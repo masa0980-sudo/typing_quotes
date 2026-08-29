@@ -7,6 +7,7 @@ interface Props {
   best: number;
   onSelectMode: (mode: Mode) => void;
   onStart: () => void;
+  onShowCredits: () => void;
 }
 
 /** 背景に流す文字。名言の一部を静かに降らせる */
@@ -22,7 +23,7 @@ const FALLING = [
   { text: "Dream", left: "94%", size: 21, dur: "22s", delay: "-13s" },
 ];
 
-export function TitleScreen({ mode, best, onSelectMode, onStart }: Props) {
+export function TitleScreen({ mode, best, onSelectMode, onStart, onShowCredits }: Props) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-950 flex flex-col items-center justify-center gap-7 p-8">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -135,6 +136,13 @@ export function TitleScreen({ mode, best, onSelectMode, onStart }: Props) {
             : "大文字はShiftなしでも入力できます"}
         </p>
       </div>
+
+      <button
+        onClick={onShowCredits}
+        className="relative text-[11px] text-white/40 underline underline-offset-4 transition-colors hover:text-white/70"
+      >
+        画像クレジット
+      </button>
     </div>
   );
 }

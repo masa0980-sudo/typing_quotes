@@ -15,11 +15,14 @@ import { TitleScreen } from "./TitleScreen";
 import { PlayScreen } from "./PlayScreen";
 import { RevealScreen } from "./RevealScreen";
 import { ResultScreen } from "./ResultScreen";
+import { CreditsScreen } from "./CreditsScreen";
 
 export function GameScreen() {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
+  // クレジットは表示するだけの画面なので、状態機械(Phase)には足さずローカルで持つ
+  const [showCredits, setShowCredits] = useState(false);
 
   // ハイスコアは localStorage なのでマウント後に読む(SSRとの不一致を避ける)
   useEffect(() => {
@@ -71,9 +74,16 @@ export function GameScreen() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // クレジットが開いているときは、まずそれを閉じる(タイトルへは戻さない)
+        if (showCredits) {
+          setShowCredits(false);
+          return;
+        }
         dispatch({ type: "TO_TITLE" });
         return;
       }
+      // クレジットを読んでいる間は打鍵として拾わない
+      if (showCredits) return;
       // 解説を読んでいる間は Enter / Space で次へ進む
       if (state.phase === "reveal") {
         if (e.key === "Enter" || e.key === " ") {
@@ -102,20 +112,24 @@ export function GameScreen() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [state]);
+  }, [state, showCredits]);
 
   if (state.phase === "title") {
     return (
-      <TitleScreen
-        mode={state.mode}
-        best={state.best}
-        onSelectMode={(mode) => dispatch({ type: "SET_MODE", mode })}
-        onStart={() => {
-          unlockAudio();
-          setIsNewBest(false);
-          dispatch({ type: "START", now: Date.now() });
-        }}
-      />
+      <>
+        <TitleScreen
+          mode={state.mode}
+          best={state.best}
+          onSelectMode={(mode) => dispatch({ type: "SET_MODE", mode })}
+          onStart={() => {
+            unlockAudio();
+            setIsNewBest(false);
+            dispatch({ type: "START", now: Date.now() });
+          }}
+          onShowCredits={() => setShowCredits(true)}
+        />
+        {showCredits && <CreditsScreen onClose={() => setShowCredits(false)} />}
+      </>
     );
   }
 

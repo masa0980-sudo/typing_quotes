@@ -1,4 +1,5 @@
 import type { Mode, Quote } from "@/lib/types";
+import { AuthorAvatar } from "./AuthorAvatar";
 
 interface Props {
   quote: Quote;
@@ -54,10 +55,16 @@ export function RevealScreen({
           <p className="mt-2 text-xs sm:text-sm text-white/45 leading-relaxed">
             {mode === "ja" ? quote.en : quote.ja}
           </p>
-          <p className="mt-3 text-sm text-white/75">
-            — {mode === "ja" ? quote.author : quote.authorEn}
-            <span className="ml-2 text-[11px] text-white/40">{quote.role}</span>
-          </p>
+          {/* 誰の言葉かが一目で分かるよう、著者行に肖像を添える */}
+          <div className="mt-4 flex items-center gap-3">
+            <AuthorAvatar authorEn={quote.authorEn} author={quote.author} size={56} />
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm text-white/85 truncate">
+                {mode === "ja" ? quote.author : quote.authorEn}
+              </span>
+              <span className="text-[11px] text-white/40 truncate">{quote.role}</span>
+            </div>
+          </div>
         </div>
 
         {/* 出典 */}

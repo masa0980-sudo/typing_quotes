@@ -4,3 +4,6 @@ out
 *.log
 .DS_Store
 tsconfig.tsbuildinfo
+
+# 肖像取得スクリプトのダウンロードキャッシュ
+.portrait-cache/

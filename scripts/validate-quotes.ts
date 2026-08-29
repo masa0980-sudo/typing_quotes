@@ -7,10 +7,13 @@
  *  3. 英文が ASCII だけか(英語モードで打てるか)
  *  4. source / note / author / role が空でないか
  *  5. id が重複していないか
+ *  6. 肖像画像が実在するか / クレジット表示が要るものに作者と出典があるか
+ *     (クレジット漏れはライセンス違反になるので、目視ではなく機械で止める)
  *
  * Node の ESM は拡張子を補完しないので、import は必ず `.ts` まで書くこと。
  * (Next.js や tsc は補完してくれるため、アプリ側のコードとは書き方が異なる)
  */
+import { existsSync } from "node:fs";
 import { SCIENCE } from "../src/lib/quotes/science.ts";
 import { PHILOSOPHY } from "../src/lib/quotes/philosophy.ts";
 import { SOCIETY } from "../src/lib/quotes/society.ts";
@@ -18,6 +21,7 @@ import { ARTS } from "../src/lib/quotes/arts.ts";
 import { JAPAN } from "../src/lib/quotes/japan.ts";
 import { SHORT } from "../src/lib/quotes/short.ts";
 import { MODERN } from "../src/lib/quotes/modern.ts";
+import { PORTRAITS, needsCredit } from "../src/lib/portraits.ts";
 import {
   buildSegments,
   fullRomaji,
@@ -78,6 +82,25 @@ for (const q of QUOTES) {
   if (FOREIGN.test(q.ja + q.note + q.source)) fail(`${q.id}: 日本語欄に他言語が混入`);
 }
 
+// ---- 肖像画像 ----
+const PORTRAIT_DIR = new URL("../public/portraits/", import.meta.url);
+const authors = new Map(QUOTES.map((q) => [q.authorEn, q.author]));
+
+for (const [authorEn, p] of Object.entries(PORTRAITS)) {
+  if (!authors.has(authorEn)) {
+    fail(`肖像 ${authorEn}: 対応する名言が無い(authorEn の綴り違い?)`);
+  }
+  if (!existsSync(new URL(p.file, PORTRAIT_DIR))) {
+    fail(`肖像 ${authorEn}: public/portraits/${p.file} が無い`);
+  }
+  if (needsCredit(p.license)) {
+    if (!p.credit || p.credit === "不明") fail(`肖像 ${authorEn}: ${p.license} なのに作者が空`);
+    if (!p.sourceUrl) fail(`肖像 ${authorEn}: ${p.license} なのに出典URLが空`);
+  }
+}
+
+const noPortrait = [...authors.keys()].filter((a) => !PORTRAITS[a]);
+
 const ids = QUOTES.map((q) => q.id);
 const dup = [...new Set(ids.filter((v, i) => ids.indexOf(v) !== i))];
 if (dup.length) fail(`id が重複: ${dup.join(", ")}`);
@@ -90,6 +113,16 @@ for (const [k, v] of Object.entries(GROUPS)) console.log(`  ${k.padEnd(11)} ${v.
 console.log(`\n合計 ${QUOTES.length}件 / ${new Set(QUOTES.map((q) => q.author)).size}人`);
 console.log(`かな長 最小${Math.min(...kana)} 最大${Math.max(...kana)} 平均${avg(kana)}`);
 console.log(`短い問題(かな22字以下) ${kana.filter((n) => n <= 22).length}件`);
+const ccCount = Object.values(PORTRAITS).filter((p) => needsCredit(p.license)).length;
+console.log(
+  `肖像 ${Object.keys(PORTRAITS).length}人ぶん` +
+    `(うちクレジット表示が必要 ${ccCount}件)`,
+);
+if (noPortrait.length) {
+  // 落とさない。存命で使える画像が無い人物は意図的に肖像なしにしてある
+  console.log(`肖像なし ${noPortrait.length}人: ${noPortrait.join(", ")}`);
+}
+
 console.log(bad === 0 ? "\n✓ 全件OK" : `\n✗ 問題 ${bad} 件`);
 
 process.exit(bad === 0 ? 0 : 1);
