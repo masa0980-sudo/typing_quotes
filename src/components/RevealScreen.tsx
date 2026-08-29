@@ -49,20 +49,27 @@ export function RevealScreen({
             border: "1px solid rgba(255,255,255,0.12)",
           }}
         >
-          <p className="text-lg sm:text-xl font-bold leading-relaxed">
-            {mode === "ja" ? quote.ja : quote.en}
-          </p>
-          <p className="mt-2 text-xs sm:text-sm text-white/45 leading-relaxed">
-            {mode === "ja" ? quote.en : quote.ja}
-          </p>
-          {/* 誰の言葉かが一目で分かるよう、著者行に肖像を添える */}
-          <div className="mt-4 flex items-center gap-3">
-            <AuthorAvatar authorEn={quote.authorEn} author={quote.author} size={56} />
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm text-white/85 truncate">
+          {/* 名言を左、発言者を右に置く。肖像の下に名前と肩書きを重ねて、
+              「この顔がこの人」と一目で結びつくようにしている */}
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="flex-1 min-w-0">
+              <p className="text-lg sm:text-xl font-bold leading-relaxed">
+                {mode === "ja" ? quote.ja : quote.en}
+              </p>
+              <p className="mt-2 text-xs sm:text-sm text-white/45 leading-relaxed">
+                {mode === "ja" ? quote.en : quote.ja}
+              </p>
+            </div>
+
+            <div className="w-24 sm:w-28 shrink-0 flex flex-col items-center gap-2 text-center">
+              <AuthorAvatar authorEn={quote.authorEn} author={quote.author} size={88} />
+              {/* 長い名前もあるので truncate せず折り返す */}
+              <span className="text-xs sm:text-sm text-white/85 leading-tight">
                 {mode === "ja" ? quote.author : quote.authorEn}
               </span>
-              <span className="text-[11px] text-white/40 truncate">{quote.role}</span>
+              <span className="text-[10px] text-white/40 leading-tight -mt-1">
+                {quote.role}
+              </span>
             </div>
           </div>
         </div>
