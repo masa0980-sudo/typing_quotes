@@ -25,12 +25,14 @@ jobs:
 
       - name: Fetch portraits
         run: python3 scripts/fetch-portraits.py
+        env:
+          PORTRAIT_BUDGET: "1500"
 
       - name: Show result
         run: |
-          ls -l public/portraits | head -5
-          echo "枚数: $(ls public/portraits | wc -l)"
-          echo "合計: $(du -sh public/portraits | cut -f1)"
+          ls public/portraits 2>/dev/null | head -3 || true
+          echo "枚数: $(ls public/portraits 2>/dev/null | wc -l)"
+          echo "合計: $(du -sh public/portraits 2>/dev/null | cut -f1)"
 
       - name: Commit
         run: |

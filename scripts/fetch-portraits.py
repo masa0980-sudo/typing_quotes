@@ -10,6 +10,11 @@ public/portraits/*.webp と src/lib/portraits.ts を生成する。
   (ネットワークポリシーが CONNECT を403で拒否する)。初回の生成は
   外部サンドボックス上で実行し、成果物だけをリポジトリへ入れてある。
 
+**取得済みのものは飛ばす。** public/portraits に画像があり portraits.ts にも
+載っている人物は再取得しない。Wikimedia は共有IPからの連続アクセスに厳しく、
+GitHub Actions のランナーからだと一度で全員ぶんを取り切れないことがあるため、
+**何度か実行して埋めていく**設計にしてある(実行のたびに成果がコミットされる)。
+
 人物を足すときは WIKI に「authorEn: 英語版Wikipediaの記事タイトル」を1行足す。
 日本の人物は姓名の順が逆(Yukichi Fukuzawa → Fukuzawa Yukichi)など表記ゆれが多いので、
 自動変換せず明示的に書く。
@@ -21,7 +26,12 @@ Commons のファイル名を直接指定する。判断はコンタクトシー
 クレジット表示が要るものは CreditsScreen に自動で出るので、
 ここで人手を介さないこと(書き漏らしがライセンス違反になるため)。
 """
-import json, os, re, subprocess, time, urllib.parse, urllib.request
+import json, os, re, subprocess, sys, time, urllib.parse, urllib.request
+
+# 1回の実行で使う時間の上限。超えたらそこで打ち切って、取れたぶんだけ書き出す。
+# (全員ぶん取れるまで何度か実行する運用)
+BUDGET_SECONDS = int(os.environ.get("PORTRAIT_BUDGET", "900"))
+STARTED = time.time()
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "public", "portraits")
@@ -97,30 +107,55 @@ def api(url, tries=6):
     raise RuntimeError("giveup " + url)
 
 
-def fetch_bytes(url, tries=7):
-    """画像本体。upload.wikimedia.org は連続アクセスに厳しく429を返すので粘る。
-    ここにリトライが無いと大半が落ちる(実際に1度目は22/70しか取れなかった)。"""
+def fetch_bytes(url, tries=4):
+    """画像本体。upload.wikimedia.org は連続アクセスに厳しく429を返すので少し粘る。
+    ただし1枚で粘りすぎると全体の時間を食うので、諦めは早くする
+    (取り逃したぶんは次回の実行で埋める)。"""
     for a in range(tries):
         try:
-            return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60).read()
+            return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=25).read()
         except Exception as e:
             if "429" in str(e) or "timed out" in str(e).lower():
-                time.sleep(4 * (a + 1)); continue
+                time.sleep(3 * (a + 1)); continue
             raise
-    raise RuntimeError("rate limited: " + url)
+    raise RuntimeError("rate limited")
 
 
 def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
+def load_existing():
+    """コミット済みの portraits.ts を読み、画像が実在するものだけを引き継ぐ。
+    これがあるおかげで、実行を分けても前回までの成果が消えない。"""
+    path = os.path.join(ROOT, "src", "lib", "portraits.ts")
+    txt = open(path, encoding="utf-8").read()
+    got = {}
+    for m in re.finditer(
+        r'"([^"]+)":\s*\{\s*file:\s*"([^"]+)",\s*credit:\s*"((?:[^"\\]|\\.)*)",'
+        r'\s*license:\s*"([^"]+)",\s*sourceUrl:\s*"([^"]+)",', txt):
+        name, f, credit, lic, url = m.groups()
+        if os.path.exists(os.path.join(OUT, f)):
+            got[name] = {"file": f, "credit": credit.replace('\\"', '"'),
+                         "license": lic, "sourceUrl": url}
+    return got
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(CACHE, exist_ok=True)
 
+    manifest = load_existing()
+    todo = [n for n in WIKI if n not in manifest]
+    print(f"取得済み {len(manifest)}件 / 残り {len(todo)}件")
+    if not todo:
+        write_ts(manifest)
+        print("すべて取得済み")
+        return
+
     # 1) 記事の代表画像名
     pageimage = {}
-    names = [n for n in WIKI if n not in OVERRIDE]
+    names = [n for n in todo if n not in OVERRIDE]
     for i in range(0, len(names), 20):   # 1件ずつ叩くと429で落ちるのでまとめて
         b = names[i:i + 20]
         d = api("https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1"
@@ -133,7 +168,7 @@ def main():
         for n in b:
             pageimage[n] = got.get(WIKI[n])
         time.sleep(1.5)
-    pageimage.update(OVERRIDE)
+    pageimage.update({k: v for k, v in OVERRIDE.items() if k in todo})
 
     # 2) ライセンス・作者・出典
     meta = {}
@@ -159,8 +194,10 @@ def main():
         time.sleep(1.5)
 
     # 3) 取得 → 128x128 WebP
-    manifest = {}
-    for n in sorted(WIKI):
+    for n in sorted(todo):
+        if time.time() - STARTED > BUDGET_SECONDS:
+            print(f"時間切れ。残り {len(todo) - len(manifest)}件は次回の実行で取得する")
+            break
         f = pageimage.get(n)
         m = meta.get(f.replace("_", " ")) if f else None
         if not m:
@@ -184,7 +221,9 @@ def main():
 
     write_ts(manifest)
     missing = [n for n in WIKI if n not in manifest]
-    print(f"\n{len(manifest)}件を書き出した。肖像なし: {NO_PORTRAIT + missing}")
+    print(f"\n{len(manifest)}件を書き出した。未取得: {missing}")
+    print(f"肖像を載せない人物: {NO_PORTRAIT}")
+    # 未取得が残っていても失敗にはしない(このコミットぶんを残して次回に続ける)
 
 
 def write_ts(manifest):
