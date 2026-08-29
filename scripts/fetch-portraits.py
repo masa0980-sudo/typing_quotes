@@ -81,6 +81,9 @@ WIKI = {
     "Winston Churchill": "Winston Churchill",
     "Wolfgang Amadeus Mozart": "Wolfgang Amadeus Mozart",
     "Yozan Uesugi": "Uesugi Yozan", "Yukichi Fukuzawa": "Yukichi Fukuzawa",
+    # 英語版に記事が無いので OVERRIDE でファイルを直接指定する。
+    # ここの値は使われないが、取得対象は WIKI のキーなので登録は必要
+    "Hikaru": "ヒカル (YouTuber)",
 }
 
 # 記事の代表画像が肖像として使えなかったものの差し替え。
@@ -97,6 +100,9 @@ OVERRIDE = {
     # 代表画像は横長の絵巻で、上端を切ると風景しか写らなかった。
     # 掛軸の肖像に差し替え、人物が下寄りなので GRAVITY を south にしてある
     "Murasaki Shikibu": "Portrait of Murasaki Shikibu.jpg",
+    # 存命の人物。CC BY 3.0 で、しかも撮影者が本人なので、
+    # 肖像権・パブリシティ権の面でもいちばん問題が起きにくいものを選んだ
+    "Hikaru": "ヒカル Hikaru（2022.01.16）.jpg",
 }
 
 # 切り出す位置。既定は north(上端)で、写真の肖像はこれで顔が入る。
@@ -108,9 +114,13 @@ GRAVITY = {
     "Matsuo Basho": "center",
 }
 
-# 肖像を載せない人物。存命で、使えるライセンスの画像が無い
-# (肖像権・パブリシティ権の面でも実写は使わない)。頭文字のモノグラムで表示される
-NO_PORTRAIT = ["Hikaru"]
+# 肖像を載せない人物。今は該当なし。
+# 使えるライセンスの画像が見つからない人物はここに書く(モノグラム表示になる)。
+#
+# 存命の人物を載せるときは、著作権(CC等)だけでなく肖像権・パブリシティ権も
+# 別途かかることに注意する。掲載中止の求めがあれば、ここに名前を足して
+# 画像を消せば元のモノグラム表示に戻る。
+NO_PORTRAIT: list[str] = []
 
 
 def api(url, tries=6):
