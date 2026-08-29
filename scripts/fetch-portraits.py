@@ -94,15 +94,16 @@ OVERRIDE = {
     "Lao Tzu": "Zhang Lu-Laozi Riding an Ox (cropped).jpg",
     # 代表画像は赤チョークの素描で、上端を切ると顔が入らなかった
     "Leonardo da Vinci": "Leonardo self.jpg",
-    # 代表画像は横長の絵巻で、上端を切ると風景しか写らなかった
-    "Murasaki Shikibu": "Tosa Mitsuoki—Portrait of Murasaki Shikibu.jpg",
+    # 代表画像は横長の絵巻で、上端を切ると風景しか写らなかった。
+    # 掛軸の肖像に差し替え、人物が下寄りなので GRAVITY を south にしてある
+    "Murasaki Shikibu": "Portrait of Murasaki Shikibu.jpg",
 }
 
 # 切り出す位置。既定は north(上端)で、写真の肖像はこれで顔が入る。
 # 横長の絵画など、顔が上端に無いものだけ個別に指定する。
 GRAVITY = {
     "Lao Tzu": "center",
-    "Murasaki Shikibu": "center",
+    "Murasaki Shikibu": "south",
     "Katsushika Hokusai": "center",
     "Matsuo Basho": "center",
 }
