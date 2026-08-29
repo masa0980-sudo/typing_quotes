@@ -26,7 +26,7 @@ export function CreditsScreen({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-gray-950/95 px-4 py-8"
+      className="fixed inset-0 z-50 overflow-y-auto bg-gray-950 px-4 py-8"
       role="dialog"
       aria-modal="true"
       aria-label="画像クレジット"

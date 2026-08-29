@@ -8,6 +8,7 @@ interface Props {
   onSelectMode: (mode: Mode) => void;
   onStart: () => void;
   onShowCredits: () => void;
+  onShowGallery: () => void;
 }
 
 /** 背景に流す文字。名言の一部を静かに降らせる */
@@ -23,7 +24,14 @@ const FALLING = [
   { text: "Dream", left: "94%", size: 21, dur: "22s", delay: "-13s" },
 ];
 
-export function TitleScreen({ mode, best, onSelectMode, onStart, onShowCredits }: Props) {
+export function TitleScreen({
+  mode,
+  best,
+  onSelectMode,
+  onStart,
+  onShowCredits,
+  onShowGallery,
+}: Props) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-950 flex flex-col items-center justify-center gap-7 p-8">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -136,6 +144,18 @@ export function TitleScreen({ mode, best, onSelectMode, onStart, onShowCredits }
             : "大文字はShiftなしでも入力できます"}
         </p>
       </div>
+
+      {/* 打たずに中身を読みたい人向けの導線。収録人物とその名言を一覧できる */}
+      <button
+        onClick={onShowGallery}
+        className="relative px-6 py-2.5 rounded-xl text-sm font-bold text-white/85 transition-all duration-150 active:scale-95 hover:text-white"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.16)",
+        }}
+      >
+        偉人・有名人一覧を見る
+      </button>
 
       <button
         onClick={onShowCredits}
