@@ -1,11 +1,16 @@
-import type { Mode } from "@/lib/types";
+import type { GameVariant, Mode } from "@/lib/types";
 import { QUOTES } from "@/lib/quotes";
-import { QUESTIONS_PER_GAME } from "@/lib/constants";
+import { QUESTIONS_PER_GAME, TIME_ATTACK_SEC } from "@/lib/constants";
 
 interface Props {
   mode: Mode;
+  variant: GameVariant;
   best: number;
+  /** アプリ内キーボードを出すか */
+  keyboardOn: boolean;
   onSelectMode: (mode: Mode) => void;
+  onSelectVariant: (variant: GameVariant) => void;
+  onToggleKeyboard: (on: boolean) => void;
   onStart: () => void;
   onShowCredits: () => void;
   onShowGallery: () => void;
@@ -26,12 +31,17 @@ const FALLING = [
 
 export function TitleScreen({
   mode,
+  variant,
   best,
+  keyboardOn,
   onSelectMode,
+  onSelectVariant,
+  onToggleKeyboard,
   onStart,
   onShowCredits,
   onShowGallery,
 }: Props) {
+  const isTimeAttack = variant === "timeattack";
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-950 flex flex-col items-center justify-center gap-7 p-8">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -61,7 +71,7 @@ export function TitleScreen({
 
       <div className="relative flex flex-col items-center gap-2">
         <div
-          className="text-5xl sm:text-6xl font-black tracking-tight drop-shadow-[0_0_40px_rgba(120,180,255,0.4)]"
+          className="text-4xl sm:text-6xl font-black tracking-tight drop-shadow-[0_0_40px_rgba(120,180,255,0.4)]"
           style={{
             background: "linear-gradient(135deg, #7dd3fc, #a78bfa, #f0abfc)",
             WebkitBackgroundClip: "text",
@@ -76,7 +86,9 @@ export function TitleScreen({
         <p className="text-xs sm:text-sm text-white/55 mt-3 text-center leading-relaxed">
           偉人と一流の名言をお題に、正確さと速さを競います。
           <br />
-          全{QUESTIONS_PER_GAME}問・収録{QUOTES.length}名言。
+          {isTimeAttack
+            ? `${TIME_ATTACK_SEC}秒で何文打てるか・収録${QUOTES.length}名言。`
+            : `全${QUESTIONS_PER_GAME}問・収録${QUOTES.length}名言。`}
         </p>
       </div>
 
@@ -84,17 +96,38 @@ export function TitleScreen({
       <div className="relative flex flex-col items-center gap-2 w-full max-w-sm">
         <span className="text-[11px] text-white/40 font-mono tracking-widest">MODE</span>
         <div className="flex gap-3 w-full">
-          <ModeButton
+          <PickButton
             active={mode === "ja"}
             onClick={() => onSelectMode("ja")}
             title="日本語"
             sub="ローマ字で入力"
           />
-          <ModeButton
+          <PickButton
             active={mode === "en"}
             onClick={() => onSelectMode("en")}
             title="English"
             sub="英語の原文を入力"
+          />
+        </div>
+      </div>
+
+      {/* 遊び方の形式 */}
+      <div className="relative flex flex-col items-center gap-2 w-full max-w-sm -mt-3">
+        <span className="text-[11px] text-white/40 font-mono tracking-widest">
+          ゲーム形式
+        </span>
+        <div className="flex gap-3 w-full">
+          <PickButton
+            active={!isTimeAttack}
+            onClick={() => onSelectVariant("quiz")}
+            title={`じっくり${QUESTIONS_PER_GAME}問`}
+            sub="1問ごとに出典と背景を読む"
+          />
+          <PickButton
+            active={isTimeAttack}
+            onClick={() => onSelectVariant("timeattack")}
+            title={`${TIME_ATTACK_SEC}秒タイムアタック`}
+            sub="解説なしで次々に打つ"
           />
         </div>
       </div>
@@ -108,7 +141,8 @@ export function TitleScreen({
           }}
         >
           <span className="text-[11px] text-white/40 font-mono tracking-widest">
-            BEST SCORE（{mode === "ja" ? "日本語" : "English"}）
+            BEST SCORE（{mode === "ja" ? "日本語" : "English"} /{" "}
+            {isTimeAttack ? `${TIME_ATTACK_SEC}秒` : `${QUESTIONS_PER_GAME}問`}）
           </span>
           <span className="text-3xl font-bold font-mono text-yellow-300 tabular-nums">
             {best.toLocaleString()}
@@ -143,6 +177,17 @@ export function TitleScreen({
             ? "し=shi/si、ん=n/nn など複数の打ち方に対応"
             : "大文字はShiftなしでも入力できます"}
         </p>
+        {/* タブレット・スマホには物理キーボードが無いので、画面内にキーボードを描く。
+            外付けキーボードを挿している人のために切れるようにしてある */}
+        <label className="flex items-center gap-2 mt-1 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={keyboardOn}
+            onChange={(e) => onToggleKeyboard(e.target.checked)}
+            className="w-4 h-4 accent-sky-400"
+          />
+          <span className="text-white/70">画面にキーボードを出す</span>
+        </label>
       </div>
 
       {/* 打たずに中身を読みたい人向けの導線。収録人物とその名言を一覧できる */}
@@ -167,7 +212,8 @@ export function TitleScreen({
   );
 }
 
-function ModeButton({
+/** モード・形式の選択ボタン。押されているほうを紫で光らせる */
+function PickButton({
   active,
   onClick,
   title,
@@ -190,7 +236,9 @@ function ModeButton({
         boxShadow: active ? "0 0 20px rgba(124,58,237,0.35)" : "none",
       }}
     >
-      <span className={`text-base font-bold ${active ? "text-white" : "text-white/70"}`}>
+      <span
+        className={`text-sm sm:text-base font-bold ${active ? "text-white" : "text-white/70"}`}
+      >
         {title}
       </span>
       <span className="text-[10px] text-white/50">{sub}</span>

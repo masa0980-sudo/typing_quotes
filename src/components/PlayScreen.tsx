@@ -1,36 +1,52 @@
+import type { ReactNode } from "react";
 import { remainingRomaji } from "@/lib/romaji";
-import type { Mode, Quote, TypingState } from "@/lib/types";
+import { TIME_ATTACK_SEC } from "@/lib/constants";
+import type { GameVariant, Mode, Quote, TypingState } from "@/lib/types";
 
 interface Props {
   quote: Quote;
   typing: TypingState;
   mode: Mode;
+  variant: GameVariant;
   index: number;
   total: number;
   correct: number;
   miss: number;
   elapsedSec: number;
+  /** タイムアタックの残り秒。クイズ形式では使わない */
+  remainingSec: number;
+  /** タイムアタックで打ち切った文の数 */
+  clearedCount: number;
   lastMiss: boolean;
+  /** アプリ内キーボード。出さないときは null */
+  keyboard?: ReactNode;
 }
 
 export function PlayScreen({
   quote,
   typing,
   mode,
+  variant,
   index,
   total,
   correct,
   miss,
   elapsedSec,
+  remainingSec,
+  clearedCount,
   lastMiss,
+  keyboard,
 }: Props) {
   const typed = typing.typed + typing.buffer;
   const rest = remainingRomaji(typing);
   const accuracy = correct + miss > 0 ? correct / (correct + miss) : 1;
   const kpm = elapsedSec > 0 ? (correct / elapsedSec) * 60 : 0;
+  const isTimeAttack = variant === "timeattack";
+  const urgent = isTimeAttack && remainingSec <= 10;
 
   return (
-    <div className="relative min-h-screen bg-gray-950 flex flex-col items-center px-4 py-6 sm:py-10">
+    // 100vh だとモバイルのアドレスバーのぶん足りず、キーボードが画面外に出る
+    <div className="relative h-[100dvh] bg-gray-950 flex flex-col items-center px-4 py-4 sm:py-8">
       {/* ミスタイプ時のフラッシュ。key を変えて毎回アニメーションを鳴らし直す */}
       {lastMiss && (
         <div
@@ -40,13 +56,30 @@ export function PlayScreen({
         />
       )}
 
-      {/* 上部ステータス */}
-      <div className="relative w-full max-w-3xl flex items-center justify-between gap-3 text-xs font-mono">
-        <span className="text-white/50">
-          第 <span className="text-white font-bold text-base">{index + 1}</span> / {total} 問
-        </span>
+      {/* 上部ステータス。タイムアタックは「あと何秒か」が最重要なので大きく出す */}
+      <div className="relative w-full max-w-3xl flex items-center justify-between gap-3 text-xs font-mono shrink-0">
+        {isTimeAttack ? (
+          <span className="flex items-baseline gap-1.5">
+            <span
+              className={`text-3xl font-black tabular-nums leading-none ${
+                urgent ? "text-red-300 animate-pulse" : "text-white"
+              }`}
+            >
+              {Math.max(0, Math.ceil(remainingSec))}
+            </span>
+            <span className="text-white/40">秒</span>
+          </span>
+        ) : (
+          <span className="text-white/50">
+            第 <span className="text-white font-bold text-base">{index + 1}</span> / {total} 問
+          </span>
+        )}
         <div className="flex gap-4 sm:gap-6">
-          <Stat label="TIME" value={`${elapsedSec.toFixed(1)}s`} />
+          {isTimeAttack ? (
+            <Stat label="打ち切り" value={`${clearedCount} 文`} />
+          ) : (
+            <Stat label="TIME" value={`${elapsedSec.toFixed(1)}s`} />
+          )}
           <Stat label="KPM" value={Math.round(kpm).toString()} />
           <Stat
             label="正確率"
@@ -57,20 +90,24 @@ export function PlayScreen({
         </div>
       </div>
 
-      {/* 進捗バー */}
-      <div className="relative w-full max-w-3xl h-1 mt-3 rounded-full bg-white/10 overflow-hidden">
+      {/* 進捗バー。タイムアタックでは残り時間、クイズでは今の1問の進み具合を表す */}
+      <div className="relative w-full max-w-3xl h-1 mt-3 rounded-full bg-white/10 overflow-hidden shrink-0">
         <div
           className="h-full rounded-full transition-all duration-150"
           style={{
-            width: `${(typed.length / Math.max(typed.length + rest.length, 1)) * 100}%`,
-            background: "linear-gradient(90deg, #7dd3fc, #a78bfa)",
+            width: isTimeAttack
+              ? `${Math.max(0, Math.min(100, (remainingSec / TIME_ATTACK_SEC) * 100))}%`
+              : `${(typed.length / Math.max(typed.length + rest.length, 1)) * 100}%`,
+            background: urgent
+              ? "linear-gradient(90deg, #fca5a5, #f87171)"
+              : "linear-gradient(90deg, #7dd3fc, #a78bfa)",
           }}
         />
       </div>
 
       <div
         key={quote.id}
-        className="relative w-full max-w-3xl flex-1 flex flex-col justify-center gap-6 animate-quote-in"
+        className="relative w-full max-w-3xl flex-1 min-h-0 overflow-y-auto flex flex-col justify-center gap-4 sm:gap-6 py-4 animate-quote-in"
       >
         {/* お題の名言。
             日本語モードは「漢字かな交じり文を読んで、下のローマ字を打つ」ので両方出す。
@@ -112,7 +149,13 @@ export function PlayScreen({
         </div>
       </div>
 
-      <p className="relative text-[11px] text-white/30 font-mono">Esc でタイトルへ戻る</p>
+      {keyboard && (
+        <div className="relative w-full max-w-3xl shrink-0 mb-2">{keyboard}</div>
+      )}
+
+      <p className="relative text-[11px] text-white/30 font-mono shrink-0">
+        Esc でタイトルへ戻る
+      </p>
     </div>
   );
 }

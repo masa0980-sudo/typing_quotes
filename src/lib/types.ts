@@ -24,6 +24,13 @@ export interface Quote {
 /** 遊ぶモード。日本語はローマ字入力、英語は原文をそのまま打つ */
 export type Mode = "ja" | "en";
 
+/**
+ * 遊び方の形式。
+ * quiz      = 決まった問数を打ち切る(1問ごとに出典と背景を読む)
+ * timeattack = 制限時間内に何文打てるかを競う(解説は挟まず結果画面でまとめて読む)
+ */
+export type GameVariant = "quiz" | "timeattack";
+
 /** ローマ字入力の1単位。かな1〜2文字に対して複数の打ち方を許容する */
 export interface RomajiSegment {
   kana: string;

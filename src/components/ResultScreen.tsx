@@ -1,10 +1,12 @@
-import { rankFor } from "@/lib/constants";
+import { rankFor, QUESTIONS_PER_GAME, TIME_ATTACK_SEC } from "@/lib/constants";
 import type { Summary } from "@/lib/reducer";
-import type { Mode, Quote } from "@/lib/types";
+import type { GameVariant, Mode, Quote } from "@/lib/types";
 
 interface Props {
   summary: Summary;
   mode: Mode;
+  variant: GameVariant;
+  /** ふりかえりに出す名言。タイムアタックでは「打ち切ったぶん」だけが渡る */
   quotes: Quote[];
   best: number;
   isNewBest: boolean;
@@ -15,6 +17,7 @@ interface Props {
 export function ResultScreen({
   summary,
   mode,
+  variant,
   quotes,
   best,
   isNewBest,
@@ -22,6 +25,7 @@ export function ResultScreen({
   onTitle,
 }: Props) {
   const { rank, note } = rankFor(summary.score);
+  const isTimeAttack = variant === "timeattack";
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 py-10 gap-6">
@@ -40,6 +44,20 @@ export function ResultScreen({
           </span>
           <span className="text-sm text-white/60 mt-1">{note}</span>
         </div>
+
+        {isTimeAttack && (
+          <div
+            className="w-full flex items-center justify-center gap-6 px-6 py-4 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            <Headline value={summary.clearedCount.toString()} unit="文" label="打ち切り" />
+            <span className="text-white/20 text-2xl">/</span>
+            <Headline value={summary.correct.toString()} unit="打鍵" label={`${TIME_ATTACK_SEC}秒で`} />
+          </div>
+        )}
 
         <div className="flex flex-col items-center">
           <span className="text-[11px] text-white/40 font-mono tracking-widest">SCORE</span>
@@ -70,7 +88,14 @@ export function ResultScreen({
             label={mode === "en" ? "WPM（英単語/分）" : "WPM 換算"}
             value={summary.wpm.toFixed(1)}
           />
-          <Cell label="タイム" value={`${summary.elapsedSec.toFixed(1)} 秒`} />
+          <Cell
+            label={isTimeAttack ? "打ち切った文" : "タイム"}
+            value={
+              isTimeAttack
+                ? `${summary.clearedCount} 文`
+                : `${summary.elapsedSec.toFixed(1)} 秒`
+            }
+          />
           <Cell label="正しい打鍵" value={`${summary.correct} 回`} />
           <Cell
             label="ミスタイプ"
@@ -82,8 +107,15 @@ export function ResultScreen({
         {/* 出題された名言のふりかえり */}
         <div className="w-full">
           <p className="text-[11px] text-white/40 font-mono tracking-widest mb-2">
-            今回の名言
+            {isTimeAttack ? "打ち切った名言" : "今回の名言"}
           </p>
+          {isTimeAttack && quotes.length === 0 && (
+            <p className="px-3 py-3 text-xs text-white/45 leading-relaxed rounded-lg"
+              style={{ background: "rgba(255,255,255,0.04)" }}>
+              時間内に打ち切れた名言はありませんでした。短い名言から練習したいときは、
+              まず全{QUESTIONS_PER_GAME}問のクイズ形式を試してみてください。
+            </p>
+          )}
           <ul className="flex flex-col gap-2">
             {quotes.map((q) => (
               <li
@@ -129,6 +161,19 @@ export function ResultScreen({
         </div>
       </div>
     </div>
+  );
+}
+
+/** タイムアタックの主役の数字 */
+function Headline({ value, unit, label }: { value: string; unit: string; label: string }) {
+  return (
+    <span className="flex flex-col items-center leading-tight">
+      <span className="text-[10px] text-white/40 tracking-widest">{label}</span>
+      <span className="flex items-baseline gap-1">
+        <span className="text-4xl font-black tabular-nums text-white">{value}</span>
+        <span className="text-xs text-white/50">{unit}</span>
+      </span>
+    </span>
   );
 }
 
