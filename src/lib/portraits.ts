@@ -194,9 +194,9 @@ export const PORTRAITS: Record<string, Portrait> = {
   },
   "Lao Tzu": {
     file: "lao-tzu.webp",
-    credit: "White whirlwind",
+    credit: "Zhang Lu",
     license: "Public domain",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Laozi_(Chinese_characters).svg",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Zhang_Lu-Laozi_Riding_an_Ox_(cropped).jpg",
   },
   "Leo Tolstoy": {
     file: "leo-tolstoy.webp",
@@ -206,9 +206,9 @@ export const PORTRAITS: Record<string, Portrait> = {
   },
   "Leonardo da Vinci": {
     file: "leonardo-da-vinci.webp",
-    credit: "Attributed to Francesco Melzi",
+    credit: "Leonardo da Vinci",
     license: "Public domain",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Francesco_Melzi_-_Portrait_of_Leonardo.png",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Leonardo_self.jpg",
   },
   "Louis Pasteur": {
     file: "louis-pasteur.webp",
@@ -272,9 +272,9 @@ export const PORTRAITS: Record<string, Portrait> = {
   },
   "Murasaki Shikibu": {
     file: "murasaki-shikibu.webp",
-    credit: "Tosa Mitsuoki (1617 - 1691)",
+    credit: "Tosa Mitsuoki",
     license: "Public domain",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Murasaki-Shikibu-composing-Genji-Monogatari.png",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Tosa_Mitsuoki%E2%80%94Portrait_of_Murasaki_Shikibu.jpg",
   },
   "Nelson Mandela": {
     file: "nelson-mandela.webp",
