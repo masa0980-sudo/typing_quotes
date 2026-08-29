@@ -144,6 +144,12 @@ export const PORTRAITS: Record<string, Portrait> = {
     license: "Public domain",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Toyotomi_Hideyoshi_c1598_Kodai-ji_Temple.png",
   },
+  "Hikaru": {
+    file: "hikaru.webp",
+    credit: "ヒカル（Hikaru）",
+    license: "CC BY 3.0",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:%E3%83%92%E3%82%AB%E3%83%AB_Hikaru%EF%BC%882022.01.16%EF%BC%89.jpg",
+  },
   "Ieyasu Tokugawa": {
     file: "ieyasu-tokugawa.webp",
     credit: "Kanō Tan'yū",
