@@ -272,9 +272,9 @@ export const PORTRAITS: Record<string, Portrait> = {
   },
   "Murasaki Shikibu": {
     file: "murasaki-shikibu.webp",
-    credit: "Tosa Mitsuoki",
+    credit: "Kanō Takanobu",
     license: "Public domain",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Tosa_Mitsuoki%E2%80%94Portrait_of_Murasaki_Shikibu.jpg",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Portrait_of_Murasaki_Shikibu.jpg",
   },
   "Nelson Mandela": {
     file: "nelson-mandela.webp",
