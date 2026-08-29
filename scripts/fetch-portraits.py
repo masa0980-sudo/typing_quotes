@@ -83,12 +83,28 @@ WIKI = {
     "Yozan Uesugi": "Uesugi Yozan", "Yukichi Fukuzawa": "Yukichi Fukuzawa",
 }
 
-# 記事の代表画像が肖像として使えなかったものの差し替え
+# 記事の代表画像が肖像として使えなかったものの差し替え。
+# 判断はコンタクトシート(全員を1枚に並べた画像)を目視して行う。
 OVERRIDE = {
     # 代表画像が家族の群像だったため、単独の肖像画に差し替え
     "Wolfgang Amadeus Mozart": "Barbara Krafft - Porträt Wolfgang Amadeus Mozart (1819).jpg",
     # 代表画像が書物の扉絵だったため、肖像の版画に差し替え
     "Epictetus": "Epictetus.png",
+    # 代表画像が「老子」という漢字だけのSVGで、人物ですらなかった
+    "Lao Tzu": "Zhang Lu-Laozi Riding an Ox (cropped).jpg",
+    # 代表画像は赤チョークの素描で、上端を切ると顔が入らなかった
+    "Leonardo da Vinci": "Leonardo self.jpg",
+    # 代表画像は横長の絵巻で、上端を切ると風景しか写らなかった
+    "Murasaki Shikibu": "Tosa Mitsuoki—Portrait of Murasaki Shikibu.jpg",
+}
+
+# 切り出す位置。既定は north(上端)で、写真の肖像はこれで顔が入る。
+# 横長の絵画など、顔が上端に無いものだけ個別に指定する。
+GRAVITY = {
+    "Lao Tzu": "center",
+    "Murasaki Shikibu": "center",
+    "Katsushika Hokusai": "center",
+    "Matsuo Basho": "center",
 }
 
 # 肖像を載せない人物。存命で、使えるライセンスの画像が無い
@@ -209,8 +225,9 @@ def main():
                 with open(raw, "wb") as fh:
                     fh.write(fetch_bytes(m["thumb"]))
                 time.sleep(1.2)   # robot policy に配慮した間隔
-            # -gravity north: 肖像は顔が上寄りなので、上を基準に正方形へ切る
-            subprocess.run(["convert", raw, "-resize", "128x128^", "-gravity", "north",
+            # 既定は north(上端基準)。肖像写真は顔が上寄りなのでこれで収まる。
+            subprocess.run(["convert", raw, "-resize", "128x128^",
+                            "-gravity", GRAVITY.get(n, "north"),
                             "-extent", "128x128", "-quality", "78",
                             os.path.join(OUT, s + ".webp")], check=True)
             manifest[n] = {"file": s + ".webp", "credit": m["credit"],
