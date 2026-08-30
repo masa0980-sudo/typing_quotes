@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { remainingRomaji } from "@/lib/romaji";
 import { TIME_ATTACK_SEC } from "@/lib/constants";
 import type { GameVariant, Mode, Quote, TypingState } from "@/lib/types";
+import { AuthorAvatar } from "./AuthorAvatar";
 
 interface Props {
   quote: Quote;
@@ -123,10 +124,17 @@ export function PlayScreen({
           >
             {mode === "ja" ? quote.en : quote.ja}
           </p>
-          <p className="mt-4 text-sm text-white/70">
-            — {mode === "ja" ? quote.author : quote.authorEn}
-            <span className="ml-2 text-[11px] text-white/40">{quote.role}</span>
-          </p>
+          <div className="mt-4 flex flex-col items-center gap-2">
+            {/* じっくり5問は1問ごとの reveal 画面で肖像が出るのでここでは出さない。
+                タイムアタックは reveal を挟まないので、誰の言葉か画面内で分かるようにする */}
+            {isTimeAttack && (
+              <AuthorAvatar authorEn={quote.authorEn} author={quote.author} size={56} />
+            )}
+            <p className="text-sm text-white/70">
+              — {mode === "ja" ? quote.author : quote.authorEn}
+              <span className="ml-2 text-[11px] text-white/40">{quote.role}</span>
+            </p>
+          </div>
         </div>
 
         {/* 打鍵ライン */}
