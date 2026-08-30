@@ -42,9 +42,27 @@ export function TitleScreen({
   onShowGallery,
 }: Props) {
   const isTimeAttack = variant === "timeattack";
+  // fal.ai で生成した背景キーアート。
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  // このページは output:"export" で事前に描画され、<img src> は最初のHTMLに
+  // そのまま乗って届く。ブラウザはReactのハイドレーションを待たずに読み込みを
+  // 始めるため、ファイルが無くて即座に失敗した場合、Reactのonerrorがまだ
+  // 仕込まれておらず取りこぼすことがある(実測で確認済み)。
+  // onerror属性はHTML自体に載るので、ハイドレーション前でも確実に効く。
+  // 中身は固定文字列(baseはビルド時の定数)なので dangerouslySetInnerHTML でも安全。
+  const artHtml = `
+    <picture>
+      <source media="(orientation: portrait)" srcset="${base}/title-bg-9x16.png">
+      <img src="${base}/title-bg-16x9.png" alt=""
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+        onerror="this.style.display='none'">
+    </picture>
+  `;
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-950 flex flex-col items-center justify-center gap-7 p-8">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute inset-0" dangerouslySetInnerHTML={{ __html: artHtml }} />
         <div className="title-grid" />
         {FALLING.map((f, i) => (
           <div
