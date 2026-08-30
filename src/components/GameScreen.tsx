@@ -16,6 +16,10 @@ import {
   getKeyboardPref,
   getKeyboardPrefServer,
   setKeyboardPref,
+  subscribeHighlightKeyPref,
+  getHighlightKeyPref,
+  getHighlightKeyPrefServer,
+  setHighlightKeyPref,
 } from "@/lib/storage";
 import { TIME_ATTACK_SEC } from "@/lib/constants";
 import { remainingRomaji } from "@/lib/romaji";
@@ -48,6 +52,11 @@ export function GameScreen() {
     subscribeKeyboardPref,
     getKeyboardPref,
     getKeyboardPrefServer,
+  );
+  const highlightNextKey = useSyncExternalStore(
+    subscribeHighlightKeyPref,
+    getHighlightKeyPref,
+    getHighlightKeyPrefServer,
   );
 
   // ハイスコアは localStorage なのでマウント後に読む(SSRとの不一致を避ける)
@@ -170,9 +179,11 @@ export function GameScreen() {
           variant={state.variant}
           best={state.best}
           keyboardOn={keyboardOn}
+          highlightNextKey={highlightNextKey}
           onSelectMode={(mode) => dispatch({ type: "SET_MODE", mode })}
           onSelectVariant={(variant) => dispatch({ type: "SET_VARIANT", variant })}
           onToggleKeyboard={setKeyboardPref}
+          onToggleHighlightKey={setHighlightKeyPref}
           onStart={() => {
             unlockAudio();
             setIsNewBest(false);
@@ -260,7 +271,13 @@ export function GameScreen() {
       clearedCount={state.cleared.length}
       lastMiss={state.lastMiss}
       keyboard={
-        keyboardOn ? <OnScreenKeyboard nextKey={nextKey} onKey={pressKey} /> : null
+        keyboardOn ? (
+          <OnScreenKeyboard
+            nextKey={nextKey}
+            highlightNext={highlightNextKey}
+            onKey={pressKey}
+          />
+        ) : null
       }
     />
   );

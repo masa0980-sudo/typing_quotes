@@ -22,10 +22,12 @@ const ROWS: string[][] = [
 interface Props {
   /** 次に打つべきキー(小文字)。ハイライトに使う。無ければ空文字 */
   nextKey: string;
+  /** false ならハイライトしない。キー配置を覚えた上級者向け */
+  highlightNext: boolean;
   onKey: (char: string) => void;
 }
 
-export function OnScreenKeyboard({ nextKey, onKey }: Props) {
+export function OnScreenKeyboard({ nextKey, highlightNext, onKey }: Props) {
   return (
     <div
       className="w-full select-none flex flex-col gap-1.5"
@@ -35,7 +37,12 @@ export function OnScreenKeyboard({ nextKey, onKey }: Props) {
       {ROWS.map((row, i) => (
         <div key={i} className="flex gap-1.5 justify-center">
           {row.map((k) => (
-            <Key key={k} char={k} active={k === nextKey} onKey={onKey} />
+            <Key
+              key={k}
+              char={k}
+              active={highlightNext && k === nextKey}
+              onKey={onKey}
+            />
           ))}
         </div>
       ))}

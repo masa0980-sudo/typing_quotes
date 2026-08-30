@@ -8,9 +8,12 @@ interface Props {
   best: number;
   /** アプリ内キーボードを出すか */
   keyboardOn: boolean;
+  /** 画面キーボードで次に打つキーを色付けするか */
+  highlightNextKey: boolean;
   onSelectMode: (mode: Mode) => void;
   onSelectVariant: (variant: GameVariant) => void;
   onToggleKeyboard: (on: boolean) => void;
+  onToggleHighlightKey: (on: boolean) => void;
   onStart: () => void;
   onShowCredits: () => void;
   onShowGallery: () => void;
@@ -34,9 +37,11 @@ export function TitleScreen({
   variant,
   best,
   keyboardOn,
+  highlightNextKey,
   onSelectMode,
   onSelectVariant,
   onToggleKeyboard,
+  onToggleHighlightKey,
   onStart,
   onShowCredits,
   onShowGallery,
@@ -206,6 +211,22 @@ export function TitleScreen({
           />
           <span className="text-white/70">画面にキーボードを出す</span>
         </label>
+        {/* キー配置を覚えた人には次のキーの色付けが邪魔になりうるので切れるようにしてある。
+            キーボード自体を出していないときは無関係な設定なので隠す */}
+        {keyboardOn && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={highlightNextKey}
+              onChange={(e) => onToggleHighlightKey(e.target.checked)}
+              className="w-4 h-4 accent-sky-400"
+            />
+            <span className="text-white/70">
+              次のキーを色付けする
+              <span className="text-white/40">（上級者はオフに）</span>
+            </span>
+          </label>
+        )}
       </div>
 
       {/* 打たずに中身を読みたい人向けの導線。収録人物とその名言を一覧できる */}

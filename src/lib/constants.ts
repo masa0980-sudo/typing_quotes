@@ -32,6 +32,9 @@ export const HIGH_SCORE_KEY = {
 /** アプリ内キーボードを出すかどうかの保存キー */
 export const KEYBOARD_PREF_KEY = "typing-quotes:onscreen-keyboard";
 
+/** 画面キーボードで次に打つキーを色付けするかどうかの保存キー */
+export const HIGHLIGHT_KEY_PREF_KEY = "typing-quotes:onscreen-keyboard-highlight";
+
 /** 評価ランクのしきい値(スコアの下限, ランク, ひとこと) */
 export const RANKS: { min: number; rank: string; note: string }[] = [
   { min: 4500, rank: "S", note: "達人の域です" },
