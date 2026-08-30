@@ -1,6 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import type { GameVariant, Mode } from "@/lib/types";
 import { QUOTES } from "@/lib/quotes";
 import { QUESTIONS_PER_GAME, TIME_ATTACK_SEC } from "@/lib/constants";
+
+/** 表紙の背景キーアート。基本はB案、たまにA案も見せる */
+const ART_FILES = {
+  b: { wide: "title-bg-b-16x9.png", tall: "title-bg-b-9x16.png" },
+  a: { wide: "title-bg-16x9.png", tall: "title-bg-9x16.png" },
+} as const;
+
+/** 5回に1回程度A案にする */
+function pickArtVariant(): keyof typeof ART_FILES {
+  return Math.random() < 0.2 ? "a" : "b";
+}
 
 interface Props {
   mode: Mode;
@@ -47,18 +61,22 @@ export function TitleScreen({
   onShowGallery,
 }: Props) {
   const isTimeAttack = variant === "timeattack";
-  // fal.ai で生成した背景キーアート。
+  // fal.ai で生成した背景キーアート。タイトル画面を開くたび(このコンポーネントの
+  // マウントごと)に抽選する。lazy initializer なので、ビルド時のプリレンダリングと
+  // 実際の各アクセスとで別々に1回ずつ計算される(ハイドレーション時の再計算は
+  // dangerouslySetInnerHTML の中なので、値が食い違ってもReactの警告対象にならない)
+  const [artVariant] = useState(pickArtVariant);
+  const art = ART_FILES[artVariant];
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   // このページは output:"export" で事前に描画され、<img src> は最初のHTMLに
   // そのまま乗って届く。ブラウザはReactのハイドレーションを待たずに読み込みを
   // 始めるため、ファイルが無くて即座に失敗した場合、Reactのonerrorがまだ
   // 仕込まれておらず取りこぼすことがある(実測で確認済み)。
   // onerror属性はHTML自体に載るので、ハイドレーション前でも確実に効く。
-  // 中身は固定文字列(baseはビルド時の定数)なので dangerouslySetInnerHTML でも安全。
   const artHtml = `
     <picture>
-      <source media="(orientation: portrait)" srcset="${base}/title-bg-9x16.png">
-      <img src="${base}/title-bg-16x9.png" alt=""
+      <source media="(orientation: portrait)" srcset="${base}/${art.tall}">
+      <img src="${base}/${art.wide}" alt=""
         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
         onerror="this.style.display='none'">
     </picture>
