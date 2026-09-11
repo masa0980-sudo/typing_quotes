@@ -108,7 +108,12 @@ export function PlayScreen({
 
       <div
         key={quote.id}
-        className="relative w-full max-w-3xl flex-1 min-h-0 overflow-y-auto flex flex-col justify-center gap-4 sm:gap-6 py-4 animate-quote-in"
+        // justify-center だけだと、中身がコンテナより高い時にflexboxが上下対称に
+        // はみ出させ、上側(=お題の文章の先頭)がスクロール不可能な領域に隠れて
+        // 読めなくなる(スマホの短い画面+画面キーボード表示時に起きやすい)。
+        // safe center は「はみ出したら start 寄せに切り替える」ため、
+        // 何を選んでも必ず先頭から読める状態を保証できる。
+        className="relative w-full max-w-3xl flex-1 min-h-0 overflow-y-auto flex flex-col [justify-content:safe_center] gap-4 sm:gap-6 py-4 animate-quote-in"
       >
         {/* お題の名言。
             日本語モードは「漢字かな交じり文を読んで、下のローマ字を打つ」ので両方出す。
