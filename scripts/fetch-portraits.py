@@ -110,9 +110,19 @@ OVERRIDE = {
 GRAVITY = {
     "Lao Tzu": "center",
     "Murasaki Shikibu": "south",
-    "Katsushika Hokusai": "center",
-    "Matsuo Basho": "center",
 }
+
+# 顔の位置が定型的でない絵画で、north/center/south のどれで切っても顔が
+# フレーム外に落ちる人物。gravityの当てずっぽうをやめ、原画を欠けさせずに
+# 余白ごと収める(CONTAIN)方式にする。実際に葛飾北斎(自画像スケッチ)と
+# 松尾芭蕉(森川許六筆の肖像画)は north/center いずれでも顔が入らなかった。
+CONTAIN = {
+    "Katsushika Hokusai",
+    "Matsuo Basho",
+}
+# はみ出した余白を埋める色。どちらも古い和紙・絹本の肖像画で、切り出しにも
+# 同系統の生成り色が写っているため、この色で埋めると違和感が出にくい
+CONTAIN_BG = "#e8dcc0"
 
 # 肖像を載せない人物。今は該当なし。
 # 使えるライセンスの画像が見つからない人物はここに書く(モノグラム表示になる)。
@@ -236,11 +246,19 @@ def main():
                 with open(raw, "wb") as fh:
                     fh.write(fetch_bytes(m["thumb"]))
                 time.sleep(1.2)   # robot policy に配慮した間隔
-            # 既定は north(上端基準)。肖像写真は顔が上寄りなのでこれで収まる。
-            subprocess.run(["convert", raw, "-resize", "128x128^",
-                            "-gravity", GRAVITY.get(n, "north"),
-                            "-extent", "128x128", "-quality", "78",
-                            os.path.join(OUT, s + ".webp")], check=True)
+            out = os.path.join(OUT, s + ".webp")
+            if n in CONTAIN:
+                # はみ出させず全体を収める(顔の位置が定型的でない絵画向け)。
+                # "128x128^" ではなく "128x128"(^無し)にすることで、はみ出す
+                # 方向ではなく収まる方向にリサイズし、余白をCONTAIN_BGで埋める
+                subprocess.run(["convert", raw, "-resize", "128x128",
+                                "-background", CONTAIN_BG, "-gravity", "center",
+                                "-extent", "128x128", "-quality", "78", out], check=True)
+            else:
+                # 既定は north(上端基準)。肖像写真は顔が上寄りなのでこれで収まる。
+                subprocess.run(["convert", raw, "-resize", "128x128^",
+                                "-gravity", GRAVITY.get(n, "north"),
+                                "-extent", "128x128", "-quality", "78", out], check=True)
             manifest[n] = {"file": s + ".webp", "credit": m["credit"],
                            "license": m["license"], "sourceUrl": m["sourceUrl"]}
             print(f"OK   {n}  [{m['license']}]")
