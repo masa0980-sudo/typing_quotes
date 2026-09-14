@@ -31,6 +31,7 @@ import {
   playFinish,
   unlockAudio,
 } from "@/lib/sound";
+import { increment as incrementPlayCount } from "@/lib/playCounts";
 import { TitleScreen } from "./TitleScreen";
 import { PlayScreen } from "./PlayScreen";
 import { RevealScreen } from "./RevealScreen";
@@ -187,6 +188,7 @@ export function GameScreen() {
           onStart={() => {
             unlockAudio();
             setIsNewBest(false);
+            incrementPlayCount();
             dispatch({ type: "START", now: Date.now() });
           }}
           onShowCredits={() => setShowCredits(true)}
@@ -246,6 +248,7 @@ export function GameScreen() {
         onRetry={() => {
           unlockAudio();
           setIsNewBest(false);
+          incrementPlayCount();
           dispatch({ type: "START", now: Date.now() });
         }}
         onTitle={() => dispatch({ type: "TO_TITLE" })}

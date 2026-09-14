@@ -206,6 +206,22 @@ Wikimedia は共有IPからの連続アクセスに厳しく、GitHub のラン�
 **手書きしないこと**（書き漏らしがそのままライセンス違反になる）。
 `npm run validate` が、クレジットの要る画像に作者と出典があるかを機械的に見ている。
 
+## プレイ回数計測(Firestore)
+
+`src/lib/playCounts.ts`。SDKは積まず、Firestore REST APIを`fetch()`で直接叩くだけの
+小さなモジュール(`Rhythm_game`(masa0980-sudo/rhythm_game)の同名の仕組みをそのまま移植)。
+プロジェクトID`rythm-game-mo`とAPIキーは、作者の複数の公開ゲームで**意図的に共有**している
+共通カウンタ置き場で、このリポジトリは`playCounts/typing_quotes`に1ドキュメントだけ使う。
+APIキーがクライアントコードに出ているのは想定どおりで、実際のアクセス制御はFirestoreの
+**セキュリティルール**側(`count`の+1更新のみ許可、新規作成は`{count: 1}`ちょうどのときだけ許可、
+更新以外の変更・削除は不可)。
+
+`increment()`をタイトル画面の「はじめる」と結果画面の「もういちど」の両方から呼んでいる
+(`src/components/GameScreen.tsx`の`onStart`/`onRetry`)。どちらも新しい1プレイの開始点で、
+1問ごとの`reveal`遷移などでは呼ばない。呼び出しはfire-and-forgetで、`dispatch({type:"START"})`の
+前に置いてあるがawaitはしておらず、通信が失敗してもゲーム進行やUIには一切影響しない
+(失敗は`console.warn`に流すだけ)。
+
 ## 公開（GitHub Pages）
 
 `main` へ push すれば自動で公開される。詳細な手順は `publish-to-pages` スキル。
