@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { GameVariant, Mode } from "@/lib/types";
 import { QUOTES } from "@/lib/quotes";
 import { QUESTIONS_PER_GAME, TIME_ATTACK_SEC } from "@/lib/constants";
+import { fetchCount } from "@/lib/playCounts";
 
 /** 表紙の背景キーアート。基本はB案、たまにA案も見せる */
 const ART_FILES = {
@@ -67,6 +68,19 @@ export function TitleScreen({
   // dangerouslySetInnerHTML の中なので、値が食い違ってもReactの警告対象にならない)
   const [artVariant] = useState(pickArtVariant);
   const art = ART_FILES[artVariant];
+
+  // 累計プレイ回数(表示用)。取れるまでは何も出さない(ローディング表示はしない)。
+  // 失敗時も null のままなので、表示側は自然に消える(AuthorAvatar と同じ考え方)。
+  const [playCount, setPlayCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCount().then((count) => {
+      if (!cancelled) setPlayCount(count);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   // このページは output:"export" で事前に描画され、<img src> は最初のHTMLに
   // そのまま乗って届く。ブラウザはReactのハイドレーションを待たずに読み込みを
@@ -201,6 +215,12 @@ export function TitleScreen({
       >
         START
       </button>
+
+      {playCount !== null && (
+        <span className="relative -mt-4 text-[11px] text-white/40 font-mono tracking-widest">
+          これまでに {playCount.toLocaleString()} 回プレイされています
+        </span>
+      )}
 
       <div
         className="relative flex flex-col items-center gap-1.5 px-6 py-3 rounded-xl text-xs font-mono text-white/80"
