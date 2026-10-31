@@ -10,8 +10,14 @@ export function loadHighScore(mode: Mode, variant: GameVariant): number {
   }
 }
 
+let writeDisabled = false;
+/** ミニ版(メドレー)ではハイスコアを書かない */
+export function disableStorageWrites() {
+  writeDisabled = true;
+}
+
 export function saveHighScore(mode: Mode, variant: GameVariant, score: number): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || writeDisabled) return;
   try {
     localStorage.setItem(HIGH_SCORE_KEY[variant][mode], String(score));
   } catch {

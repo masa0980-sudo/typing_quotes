@@ -270,3 +270,14 @@ CLAUDE.md に残しておくのは、**一度やらかして時間を溶かし�
 | `scripts/dev.sh` | 開発サーバー（ポート固定） |
 | `scripts/check.sh` | push前の3点セット（検証 → 型 → 本番と同じビルド） |
 | `settings.json` | 定型コマンドの許可設定 |
+
+## Mini mode (`?mini=1`, called from mini-medley)
+
+`C:\claude\repos\mini-medley` が `?mini=1&sec=30&mute=0|1` で iframe に呼ぶ。**プロトコルの仕様は mini-medley の CLAUDE.md が正本**。`mini=1` が無いときは従来どおり。
+
+- `src/lib/mini.ts` が URL の読み取り・親への postMessage・点数換算を持つ。**日本語（ローマ字）・タイムアタック・短い名言だけ**（`setMiniShortOnly`。読み22字以内）で遊ぶ。
+- 流れ: 起動 → 暗い待機画面で `mini-ready` → ハブの `mini-go` で `START` と `COUNTDOWN`×3（カウントダウンはハブが出すので飛ばす）→ `sec` 秒の時間切れ（`TIMEUP`）で `mini-result` を1回だけ送り、「おしまい」の暗転で止まる。
+- 点数: `(正しく打てたキー − ミス×2) / 120 × 100`（30秒で4打鍵/秒でほぼ100点）。ボット実測: 2.5打鍵/秒で56・5打鍵/秒で100・5打鍵/秒でミス多めで66。
+- 書かないもの: プレイ回数、ハイスコア（`disableStorageWrites()`）。Esc でタイトルへ戻らない。音は `sound.ts` の master ゲイン（`setMuted`）。
+- 単独で `?mini=1&sec=10` を開くと 300ms 後に自動開始。テスト用に `window.__typing.state()/done()`（ミニ版のときだけ）。
+- `claude/title-art` ブランチ（背景キーアート2コミット）は main に未マージ。このミニ版は main から作った。

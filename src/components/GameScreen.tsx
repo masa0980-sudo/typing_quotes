@@ -22,6 +22,9 @@ import {
   setHighlightKeyPref,
 } from "@/lib/storage";
 import { TIME_ATTACK_SEC } from "@/lib/constants";
+import { readMini, postToHub, scoreToPoints, type MiniConfig } from "@/lib/mini";
+import { disableStorageWrites } from "@/lib/storage";
+import { setMiniShortOnly } from "@/lib/reducer";
 import { remainingRomaji } from "@/lib/romaji";
 import {
   playKey,
@@ -30,6 +33,7 @@ import {
   playCount,
   playFinish,
   unlockAudio,
+  setMuted,
 } from "@/lib/sound";
 import { increment as incrementPlayCount } from "@/lib/playCounts";
 import { TitleScreen } from "./TitleScreen";
@@ -42,6 +46,67 @@ import { OnScreenKeyboard } from "./OnScreenKeyboard";
 
 export function GameScreen() {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
+
+  // ---- ミニ版(?mini=1。mini-medley から iframe で呼ばれる。仕様は mini-medley/CLAUDE.md) ----
+  // 日本語(ローマ字)・タイムアタック・短い名言だけ。時間切れ(sec秒)で成績を1回だけ返す
+  const [mini, setMini] = useState<MiniConfig | null>(null);
+  const [miniDone, setMiniDone] = useState(false);
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  });
+  const miniDoneRef = useRef(false);
+  const finishMini = (why: string) => {
+    if (miniDoneRef.current) return;
+    miniDoneRef.current = true;
+    setMiniDone(true);
+    const s = stateRef.current;
+    postToHub({
+      type: "mini-result",
+      score: scoreToPoints(s.totalCorrect, s.totalMiss),
+      detail: { correct: s.totalCorrect, miss: s.totalMiss, cleared: s.cleared.length, why },
+    });
+  };
+  useEffect(() => {
+    const cfg = readMini();
+    if (!cfg) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMini(cfg);
+    setMuted(cfg.mute);
+    disableStorageWrites();
+    setMiniShortOnly(true);
+    const go = () => {
+      if (stateRef.current.phase !== "title") return;
+      unlockAudio();
+      dispatch({ type: "SET_MODE", mode: "ja" });
+      dispatch({ type: "SET_VARIANT", variant: "timeattack" });
+      dispatch({ type: "START", now: Date.now() });
+      // カウントダウンはハブが出すので、ここでは飛ばして即プレイにする
+      for (let i = 0; i < 3; i++) dispatch({ type: "COUNTDOWN", now: Date.now() });
+    };
+    const onMsg = (e: MessageEvent) => {
+      if (e.source !== window.parent || e.data?.type !== "mini-go") return;
+      go();
+    };
+    window.addEventListener("message", onMsg);
+    postToHub({ type: "mini-ready" });
+    // 単独で開いたとき(親が無い)は自動で始める
+    const solo = window.parent === window ? window.setTimeout(go, 300) : undefined;
+    (window as unknown as { __typing?: unknown }).__typing = {
+      state: () => stateRef.current,
+      done: () => miniDoneRef.current,
+    };
+    return () => {
+      window.removeEventListener("message", onMsg);
+      if (solo) window.clearTimeout(solo);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const limitSec = mini ? mini.sec : TIME_ATTACK_SEC;
+  useEffect(() => {
+    if (mini && state.phase === "result") finishMini("time");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mini, state.phase]);
   // 時計は1つだけ持ち、経過時間・残り時間はそこから計算する
   const [now, setNow] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
@@ -81,13 +146,13 @@ export function GameScreen() {
       setNow(t);
       if (
         state.variant === "timeattack" &&
-        t - state.startedAt >= TIME_ATTACK_SEC * 1000
+        t - state.startedAt >= limitSec * 1000
       ) {
         dispatch({ type: "TIMEUP" });
       }
     }, 100);
     return () => clearInterval(id);
-  }, [state.phase, state.variant, state.startedAt]);
+  }, [state.phase, state.variant, state.startedAt, limitSec]);
 
   // 結果に入ったらハイスコアを保存
   const savedForRef = useRef<number>(-1);
@@ -96,6 +161,7 @@ export function GameScreen() {
       savedForRef.current = -1;
       return;
     }
+    if (mini) return; // ミニ版はハイスコアも終了音も出さない
     const summary = summarize(state);
     if (savedForRef.current === summary.score) return;
     savedForRef.current = summary.score;
@@ -108,13 +174,13 @@ export function GameScreen() {
     } else {
       setIsNewBest(false);
     }
-  }, [state.phase, state]);
+  }, [state.phase, state, mini]);
 
   const playing = state.phase === "playing";
   const elapsedSec = playing ? Math.max(0, now - state.questionStartedAt) / 1000 : 0;
   const remainingSec = playing
-    ? Math.max(0, TIME_ATTACK_SEC - Math.max(0, now - state.startedAt) / 1000)
-    : TIME_ATTACK_SEC;
+    ? Math.max(0, limitSec - Math.max(0, now - state.startedAt) / 1000)
+    : limitSec;
 
   /**
    * 打鍵1文字ぶんの処理。物理キーボードとアプリ内キーボードで共通に使う。
@@ -140,6 +206,7 @@ export function GameScreen() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (readMini()) return; // ミニ版はタイトルへ戻さない
         // オーバーレイが開いているときは、まずそれを閉じる(タイトルへは戻さない)。
         // 人物一覧は中で人物を選べるので、Escの扱いは GalleryScreen 側に任せる
         if (showGallery) return;
@@ -171,6 +238,15 @@ export function GameScreen() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [state.phase, showCredits, showGallery, pressKey]);
+
+  if (mini && (state.phase === "title" || state.phase === "result" || miniDone)) {
+    // 待機中・終了後は静かな暗転だけ(タイトルや結果は出さない)
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white/60 text-sm">
+        {miniDone ? "おしまい" : ""}
+      </div>
+    );
+  }
 
   if (state.phase === "title") {
     return (

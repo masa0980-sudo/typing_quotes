@@ -98,6 +98,12 @@ const LENGTH_WEIGHTS: Record<Mode, { max: number; weight: number }[]> = {
   ],
 };
 
+let miniShortOnly = false;
+/** ミニ版(?mini=1)のときだけ呼ぶ。短い名言だけを出題する */
+export function setMiniShortOnly(v: boolean) {
+  miniShortOnly = v;
+}
+
 /** そのモードで実際に打つ文字列の長さ */
 function typingLength(quote: Quote, mode: Mode): number {
   return mode === "ja" ? quote.kana.length : quote.en.length;
@@ -113,7 +119,10 @@ function weightOf(quote: Quote, mode: Mode): number {
  * ユーザー操作の中でだけ呼ぶ(SSRとの不一致を避けるため)。
  */
 function pickQuotes(count: number, mode: Mode): Quote[] {
-  const pool = [...QUOTES];
+  // ミニ版(メドレー)は短い名言だけ。30秒で1〜3文を打ち切れる長さにする
+  const pool = miniShortOnly
+    ? QUOTES.filter((q) => typingLength(q, mode) <= (mode === "ja" ? 22 : 45))
+    : [...QUOTES];
   const weights = pool.map((q) => weightOf(q, mode));
   const picked: Quote[] = [];
   const n = Math.min(count, pool.length);

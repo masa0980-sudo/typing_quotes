@@ -14,6 +14,22 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
+let master: GainNode | null = null;
+let muted = false;
+function getMaster(ac: AudioContext): GainNode {
+  if (!master) {
+    master = ac.createGain();
+    master.gain.value = muted ? 0 : 1;
+    master.connect(ac.destination);
+  }
+  return master;
+}
+/** メドレーから mute=1 で呼ばれたとき。効果音はここを通るので0にすれば無音 */
+export function setMuted(m: boolean) {
+  muted = m;
+  if (master) master.gain.value = m ? 0 : 1;
+}
+
 function tone(
   freq: number,
   duration: number,
@@ -27,7 +43,7 @@ function tone(
   const osc = ac.createOscillator();
   const gain = ac.createGain();
   osc.connect(gain);
-  gain.connect(ac.destination);
+  gain.connect(getMaster(ac));
   osc.type = type;
   const t = ac.currentTime + startOffset;
   osc.frequency.setValueAtTime(freq, t);
