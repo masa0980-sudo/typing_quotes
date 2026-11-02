@@ -24,7 +24,7 @@ export function postToHub(msg: Record<string, unknown>): void {
 }
 
 // 100点の目安: 打鍵（正しく打てたキー − ミス×2）が120。30秒で 4打鍵/秒＝かなり速い人
-export const MINI_KEYS_FOR_100 = 120;
+export const MINI_KEYS_FOR_100 = 240; // 60秒版(以前は30秒で120)
 
 export function scoreToPoints(correct: number, miss: number): number {
   const net = Math.max(0, correct - miss * 2);
